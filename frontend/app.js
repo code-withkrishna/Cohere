@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const money = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
 let busy = false;
+let executionAnimating = false;
 
 async function api(path, options = {}) {
   const res = await fetch(path, { headers: {'Content-Type':'application/json'}, ...options });
@@ -41,20 +42,48 @@ function renderGraph(graph, disrupted) {
     <div class="graph-footer"><span>${graph.nodes.length} nodes</span><span>${graph.edges.length} dependency edges traced</span></div>`;
 }
 
-function renderActivity(s) {
+function renderActivity(s, transient = []) {
   const root = $('agent-activity');
   const seen = new Set();
-  const rows = (s.audit || []).slice().reverse().filter(a => {
+  const auditRows = (s.audit || []).slice().reverse().filter(a => {
     if (seen.has(a.event)) return false;
     seen.add(a.event);
     return true;
   });
+  const rows = [...auditRows, ...transient.map(x => ({actor:x.actor,event:x.event,live:true}))];
   if (!rows.length) {
     root.innerHTML = '<div class="activity-empty">Agent activity will appear as COHERE processes the disruption.</div>';
     return;
   }
   root.innerHTML = `<div class="activity-title">LIVE AGENT ACTIVITY</div>` + rows.map((a, idx) => `
-    <div class="activity-row ${idx === rows.length - 1 ? 'latest' : ''}"><span class="activity-dot"></span><div><b>${a.actor}</b><small>${a.event.replaceAll('_',' ')}</small></div><span class="activity-check">✓</span></div>`).join('');
+    <div class="activity-row ${a.live ? 'live' : ''} ${idx === rows.length - 1 ? 'latest' : ''}"><span class="activity-dot"></span><div><b>${a.actor}</b><small>${a.event.replaceAll('_',' ')}</small></div><span class="activity-check">${a.live ? '…' : '✓'}</span></div>`).join('');
+}
+
+function renderExecution(s, transient = []) {
+  const root = $('execution');
+  const selected = s.selected_strategy;
+  if (transient.length) {
+    const done = new Set(transient.filter(x => x.done).map(x => x.key));
+    const steps = [
+      ['inventory','Inventory transfer','IN PROGRESS'],
+      ['procurement','Procurement action','QUEUED'],
+      ['schedule','Production schedule','QUEUED'],
+      ['continuity','Continuity verification','QUEUED']
+    ];
+    root.innerHTML = `<div class="execution-live"><span class="pulse"></span> COHERE execution orchestrator running${selected ? ` • ${selected.name}` : ''}</div>` + steps.map(([key,label,waiting], idx) => {
+      const current = transient[0]?.key === key;
+      const isDone = done.has(key);
+      return `<div class="exec-row ${current ? 'active' : ''}"><span>${label}</span><b class="${isDone ? 'ok':''}">${isDone ? '✓ COMPLETE' : current ? 'RUNNING…' : waiting}</b></div>`;
+    }).join('');
+    return;
+  }
+  if (s.executed) {
+    root.innerHTML = '<div class="execution-live verified"><span>✓</span> RECOVERY WORKFLOW VERIFIED</div><div class="exec-row"><span>Inventory transfer</span><b class="ok">✓ COMPLETE</b></div><div class="exec-row"><span>Procurement action</span><b class="ok">✓ COMPLETE</b></div><div class="exec-row"><span>Production schedule</span><b class="ok">✓ UPDATED</b></div><div class="exec-row"><span>Continuity</span><b class="ok">✓ RESTORED</b></div>';
+  } else if (s.approved) {
+    root.innerHTML = '<div class="exec-row"><span>Inventory transfer</span><b>READY</b></div><div class="exec-row"><span>Procurement action</span><b>READY</b></div><div class="exec-row"><span>Production schedule</span><b>READY</b></div><div class="exec-row"><span>Continuity</span><b>AWAITING EXECUTION</b></div>';
+  } else {
+    root.innerHTML = '<div class="exec-row"><span>Inventory transfer</span><b>—</b></div><div class="exec-row"><span>Procurement action</span><b>—</b></div><div class="exec-row"><span>Production schedule</span><b>—</b></div><div class="exec-row"><span>Continuity</span><b>—</b></div>';
+  }
 }
 
 function render(s) {
@@ -75,6 +104,7 @@ function render(s) {
 
   renderGraph(s.impact_graph, s.disrupted);
   renderActivity(s);
+  renderExecution(s);
 
   const list = $('scenarios');
   const rec = s.recommendation;
@@ -103,17 +133,6 @@ function render(s) {
     decision.className = 'decision idle';
     decision.innerHTML = '<div class="decision-icon">✓</div><div><b>No approval required</b><p>COHERE is operating normally. High-impact actions will pause here for human approval.</p></div>';
   }
-
-  const execution = $('execution');
-  if (s.executed) {
-    execution.innerHTML = '<div class="exec-row"><span>Inventory transfer</span><b class="ok">✓ COMPLETE</b></div><div class="exec-row"><span>Procurement action</span><b class="ok">✓ COMPLETE</b></div><div class="exec-row"><span>Production schedule</span><b class="ok">✓ UPDATED</b></div><div class="exec-row"><span>Continuity</span><b class="ok">✓ RESTORED</b></div>';
-  } else if (s.approved) {
-    execution.innerHTML = '<div class="exec-row"><span>Inventory transfer</span><b>READY</b></div><div class="exec-row"><span>Procurement action</span><b>READY</b></div><div class="exec-row"><span>Production schedule</span><b>READY</b></div><div class="exec-row"><span>Continuity</span><b>AWAITING EXECUTION</b></div>';
-  } else {
-    execution.innerHTML = '<div class="exec-row"><span>Inventory transfer</span><b>—</b></div><div class="exec-row"><span>Procurement action</span><b>—</b></div><div class="exec-row"><span>Production schedule</span><b>—</b></div><div class="exec-row"><span>Continuity</span><b>—</b></div>';
-  }
-
-  $('audit').innerHTML = s.audit.length ? s.audit.map(a => `<div class="audit-row"><time>${new Date(a.timestamp).toLocaleTimeString()}</time><b>${a.event}</b><span>${a.detail}</span></div>`).join('') : '<div class="empty">No events yet.</div>';
 }
 
 async function refresh() { try { render(await api('/api/state')); } catch (e) { console.error(e); } }
@@ -122,6 +141,7 @@ async function simulateDisruption() {
   setBusy(true);
   try {
     render(await api('/api/disruptions/simulate', {method:'POST'}));
+    await new Promise(r => setTimeout(r, 450));
     render(await api('/api/recovery/generate', {method:'POST'}));
   } catch (e) { alert(e.message); } finally { setBusy(false); }
 }
@@ -133,8 +153,30 @@ async function approve(id) {
     render(await api('/api/recovery/approve', {method:'POST', body:JSON.stringify({strategy_id:id})}));
   } catch (e) { alert(e.message); }
 }
+
 async function executeRecovery() {
-  try { render(await api('/api/recovery/execute', {method:'POST'})); } catch (e) { alert(e.message); }
+  if (executionAnimating) return;
+  executionAnimating = true;
+  try {
+    const s = await api('/api/state');
+    if (!s.approved) return;
+    const steps = [
+      {key:'inventory', actor:'Execution Agent', event:'INVENTORY_TRANSFER', delay:650},
+      {key:'procurement', actor:'Execution Agent', event:'PROCUREMENT_ACTION', delay:650},
+      {key:'schedule', actor:'Execution Agent', event:'PRODUCTION_SCHEDULE', delay:650},
+      {key:'continuity', actor:'Verification Agent', event:'CONTINUITY_CHECK', delay:750}
+    ];
+    const transient = [];
+    for (const step of steps) {
+      transient.push({...step, done:false});
+      renderExecution(s, transient);
+      renderActivity(s, transient.map(x => ({actor:x.actor,event:x.event,live:true})));
+      await new Promise(r => setTimeout(r, step.delay));
+      transient[transient.length - 1].done = true;
+      renderExecution(s, transient);
+    }
+    render(await api('/api/recovery/execute', {method:'POST'}));
+  } catch (e) { alert(e.message); } finally { executionAnimating = false; }
 }
 async function resetDemo() {
   try { render(await api('/api/reset', {method:'POST'})); } catch (e) { alert(e.message); }
