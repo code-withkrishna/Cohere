@@ -30,15 +30,9 @@
     </section>
 
     <section class="grid two">
-      <div class="card">
+      <div class="card graph-card">
         <div class="card-head"><div><span class="section-label">01 / SENSE + TRACE</span><h2>Disruption impact graph</h2></div><span id="confidence" class="confidence">—</span></div>
-        <div class="flow">
-          <div class="node supplier-node"><span>SUPPLIER</span><b>Alpha Components</b><small id="supplier-state">Active</small></div>
-          <div class="arrow">↓</div>
-          <div class="node"><span>CRITICAL COMPONENT</span><b>MC-204</b><small>Control Processor</small></div>
-          <div class="arrow">↓</div>
-          <div class="node split"><div><span>PLANT</span><b>Chennai-01</b><small>3.4 day runway</small></div><div><span>DOWNSTREAM</span><b id="affected-plants">0 plants</b><small id="affected-orders">0 orders</small></div></div>
-        </div>
+        <div id="impact-graph" class="impact-graph"><div class="empty">Trigger a disruption to trace the dependency chain.</div></div>
       </div>
 
       <div class="card">
@@ -55,6 +49,7 @@
       <div class="card">
         <div class="card-head"><div><span class="section-label">04 / EXECUTION</span><h2>Recovery status</h2></div></div>
         <div id="execution" class="execution"><div class="exec-row"><span>Inventory transfer</span><b>—</b></div><div class="exec-row"><span>Procurement action</span><b>—</b></div><div class="exec-row"><span>Production schedule</span><b>—</b></div><div class="exec-row"><span>Continuity</span><b>—</b></div></div>
+        <div id="agent-activity" class="agent-activity"><div class="activity-empty">Agent activity will appear as COHERE processes the disruption.</div></div>
       </div>
     </section>
 
