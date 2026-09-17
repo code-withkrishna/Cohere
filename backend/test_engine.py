@@ -51,7 +51,7 @@ def test_disruption_flow():
     assert result['executed'] is True
     assert result['twin']['chennai_inventory_days'] == 5.4
     assert result['twin']['hyderabad_inventory_days'] == 6.2
-    assert result['twin']['inventory_transfer_days'] == 2
+    assert result['twin']['inventory_transfer_days'] == 2.0
     assert result['twin']['orders_protected'] == 4
     assert result['twin']['continuity'] == 'PROTECTED'
     assert result['impact']['severity'] == 'RECOVERED'
@@ -86,3 +86,49 @@ def test_reset_restores_digital_twin():
     assert state['twin']['inventory_transfer_days'] == 0
     assert state['twin']['orders_protected'] == 0
     assert state['twin']['continuity'] == 'NORMAL'
+
+
+def test_alt_supplier_feasibility_and_consistency():
+    client.post('/api/reset')
+    client.post('/api/disruptions/simulate')
+    state = client.post('/api/recovery/generate').json()
+    alt = next(s for s in state['scenarios'] if s['id'] == 'ALT_SUPPLIER')
+    assert alt['feasible'] is True
+    assert alt['recovery_days'] == 3
+    assert alt['line_stop_risk'] == 'LOW'
+
+    preview = client.post('/api/recovery/simulate', json={'strategy_id': 'ALT_SUPPLIER'}).json()
+    assert preview['ok'] is True
+    assert preview['recovery_buffer_days'] == 0.4
+    assert preview['line_stop_avoided'] is True
+    assert preview['decision'] == 'CONTINUITY MAINTAINED'
+
+
+def test_execute_endpoint_idempotency():
+    client.post('/api/reset')
+    client.post('/api/disruptions/simulate')
+    client.post('/api/recovery/generate')
+    client.post('/api/recovery/approve', json={'strategy_id': 'TRANSFER'})
+    
+    first_exec = client.post('/api/recovery/execute').json()
+    assert first_exec['ok'] is True
+    audit_count_before = len(first_exec['audit'])
+
+    second_exec = client.post('/api/recovery/execute').json()
+    assert second_exec['ok'] is True
+    audit_count_after = len(second_exec['audit'])
+    assert audit_count_after == audit_count_before
+    assert second_exec['twin'] == first_exec['twin']
+
+
+def test_non_transfer_strategy_digital_twin_accuracy():
+    client.post('/api/reset')
+    client.post('/api/disruptions/simulate')
+    client.post('/api/recovery/generate')
+    client.post('/api/recovery/approve', json={'strategy_id': 'ALT_SUPPLIER'})
+    res = client.post('/api/recovery/execute').json()
+    assert res['ok'] is True
+    assert res['twin']['inventory_transfer_days'] == 0.0
+    assert res['twin']['hyderabad_inventory_days'] == 8.2
+    assert res['twin']['chennai_inventory_days'] == 6.4
+    assert res['twin']['orders_protected'] == 4

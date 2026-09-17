@@ -145,12 +145,70 @@ def impact_graph() -> dict[str, Any]:
 def generate_scenarios() -> list[dict[str, Any]]:
     if not state["disrupted"] or state["executed"]:
         return []
-    return [
-        {"id": "WAIT", "name": "Wait for Primary Supplier", "recovery_days": 18, "cost_delta": 0, "line_stop_risk": "HIGH", "compliance": "PASS", "feasible": False, "reason": "Recovery arrives after production runway expires."},
-        {"id": "ALT_SUPPLIER", "name": "Switch to Beta Components", "recovery_days": 4, "cost_delta": 42000, "line_stop_risk": "LOW", "compliance": "PASS", "feasible": True, "reason": "Qualified alternate supplier has available capacity and clears compliance."},
-        {"id": "TRANSFER", "name": "Transfer Inventory to Chennai-01", "recovery_days": 2, "cost_delta": 18000, "line_stop_risk": "LOW", "compliance": "PASS", "feasible": True, "reason": "Move existing MC-204 stock from Hyderabad-02 before Chennai-01 reaches zero."},
-        {"id": "SUBSTITUTE", "name": "Use MC-204B Substitute", "recovery_days": 3, "cost_delta": 15000, "line_stop_risk": "MEDIUM", "compliance": "REVIEW", "feasible": False, "reason": "Engineering qualification is required before production use."},
+    runway = round(impact()["line_stop_days"], 1)
+    catalog = [
+        {
+            "id": "WAIT",
+            "name": "Wait for Primary Supplier",
+            "recovery_days": 18,
+            "cost_delta": 0,
+            "line_stop_risk": "HIGH",
+            "compliance": "PASS",
+            "reason": "Recovery arrives after production runway expires.",
+        },
+        {
+            "id": "ALT_SUPPLIER",
+            "name": "Switch to Beta Components",
+            "recovery_days": 3,
+            "cost_delta": 42000,
+            "line_stop_risk": "LOW",
+            "compliance": "PASS",
+            "reason": "Qualified alternate supplier with expedited delivery clears compliance.",
+        },
+        {
+            "id": "TRANSFER",
+            "name": "Transfer Inventory to Chennai-01",
+            "recovery_days": 2,
+            "cost_delta": 18000,
+            "line_stop_risk": "LOW",
+            "compliance": "PASS",
+            "reason": "Move existing MC-204 stock from Hyderabad-02 before Chennai-01 reaches zero.",
+        },
+        {
+            "id": "SUBSTITUTE",
+            "name": "Use MC-204B Substitute",
+            "recovery_days": 3,
+            "cost_delta": 15000,
+            "line_stop_risk": "MEDIUM",
+            "compliance": "REVIEW",
+            "reason": "Engineering qualification is required before production use.",
+        },
     ]
+    scenarios = []
+    for s in catalog:
+        buffer = round(runway - s["recovery_days"], 1)
+        time_viable = buffer >= 0
+        compliance_viable = s["compliance"] == "PASS"
+        feasible = time_viable and compliance_viable
+        risk = s["line_stop_risk"]
+        reason = s["reason"]
+        if not time_viable:
+            risk = "HIGH"
+            reason = f"Recovery arrives after production runway expires ({s['recovery_days']}d > {runway}d)."
+        elif not compliance_viable:
+            risk = "MEDIUM"
+            reason = "Engineering qualification is required before production use."
+        scenarios.append({
+            "id": s["id"],
+            "name": s["name"],
+            "recovery_days": s["recovery_days"],
+            "cost_delta": s["cost_delta"],
+            "line_stop_risk": risk,
+            "compliance": s["compliance"],
+            "feasible": feasible,
+            "reason": reason,
+        })
+    return scenarios
 
 
 def recommendation() -> dict[str, Any] | None:
@@ -207,7 +265,13 @@ def simulate_recovery(req: SimulationRequest):
     if not strategy:
         return {"ok": False, "error": "Unknown recovery strategy."}
     buffer = round(impact()["line_stop_days"] - strategy["recovery_days"], 1)
-    return {"ok": True, "strategy": strategy, "recovery_buffer_days": buffer, "line_stop_avoided": buffer >= 0, "decision": "CONTINUITY MAINTAINED" if buffer > 0 else "LINE STOP RISK"}
+    return {
+        "ok": True,
+        "strategy": strategy,
+        "recovery_buffer_days": buffer,
+        "line_stop_avoided": buffer >= 0,
+        "decision": "CONTINUITY MAINTAINED" if buffer >= 0 else "LINE STOP RISK",
+    }
 
 
 @app.post("/api/recovery/approve")
@@ -218,7 +282,11 @@ def approve_recovery(req: ApprovalRequest):
     state["selected_strategy"] = strategy
     state["approved"] = True
     needs_threshold = strategy["cost_delta"] > POLICIES["approval_cost_threshold"]
-    detail = "Policy check flagged cost above the approval threshold. Human authorization recorded." if needs_threshold else "Policy and compliance checks passed. Cost is within the configured threshold."
+    detail = (
+        "Policy check flagged cost above the approval threshold. Human authorization recorded."
+        if needs_threshold
+        else "Policy and compliance checks passed. Cost is within the configured threshold."
+    )
     audit("COMPLIANCE_CHECK", detail, "Compliance Agent")
     audit("HUMAN_APPROVAL", f"Recovery approved: {strategy['name']}.", "Supply Planner")
     return {"ok": True, **get_state()}
@@ -228,16 +296,51 @@ def approve_recovery(req: ApprovalRequest):
 def execute_recovery():
     if not state["approved"]:
         return {"ok": False, "error": "Human approval is required before execution."}
+    if state["executed"]:
+        return {"ok": True, **get_state()}
     strategy = state["selected_strategy"]
     state["executed"] = True
+    runway = plant_data()[0]["inventory_days"]
     if strategy["id"] == "TRANSFER":
-        state["twin"].update({"chennai_inventory_days": 5.4, "hyderabad_inventory_days": 6.2, "inventory_transfer_days": 2, "orders_protected": len(BASE_ORDERS), "continuity": "PROTECTED"})
+        state["twin"].update({
+            "chennai_inventory_days": 5.4,
+            "hyderabad_inventory_days": 6.2,
+            "inventory_transfer_days": 2.0,
+            "orders_protected": len(BASE_ORDERS),
+            "continuity": "PROTECTED",
+        })
+    elif strategy["id"] == "ALT_SUPPLIER":
+        state["twin"].update({
+            "chennai_inventory_days": 6.4,
+            "hyderabad_inventory_days": 8.2,
+            "inventory_transfer_days": 0.0,
+            "orders_protected": len(BASE_ORDERS),
+            "continuity": "PROTECTED",
+        })
     else:
-        state["twin"].update({"chennai_inventory_days": max(4.0, strategy["recovery_days"] + 1.0), "inventory_transfer_days": strategy["recovery_days"], "orders_protected": len(BASE_ORDERS), "continuity": "PROTECTED"})
-    buffer = 3.4 - strategy["recovery_days"]
-    audit("EXECUTION", f"Executed recovery plan: {strategy['name']}. Inventory, procurement and production actions were simulated.", "Execution Agent")
-    audit("DIGITAL_TWIN_UPDATED", f"Chennai runway increased to {state['twin']['chennai_inventory_days']:.1f} days; {state['twin']['orders_protected']} orders moved to protected status.", "Execution Agent")
-    audit("RECOVERY_VERIFIED", f"Production continuity restored with a +{buffer:.1f}-day recovery buffer.", "Verification Agent")
+        state["twin"].update({
+            "chennai_inventory_days": max(4.0, strategy["recovery_days"] + 1.0),
+            "hyderabad_inventory_days": 8.2,
+            "inventory_transfer_days": 0.0,
+            "orders_protected": len(BASE_ORDERS),
+            "continuity": "PROTECTED",
+        })
+    buffer = round(runway - strategy["recovery_days"], 1)
+    audit(
+        "EXECUTION",
+        f"Executed recovery plan: {strategy['name']}. Inventory, procurement and production actions were simulated.",
+        "Execution Agent",
+    )
+    audit(
+        "DIGITAL_TWIN_UPDATED",
+        f"Chennai runway increased to {state['twin']['chennai_inventory_days']:.1f} days; {state['twin']['orders_protected']} orders moved to protected status.",
+        "Execution Agent",
+    )
+    audit(
+        "RECOVERY_VERIFIED",
+        f"Production continuity restored with a {buffer:+.1f}-day recovery buffer.",
+        "Verification Agent",
+    )
     return {"ok": True, **get_state()}
 
 

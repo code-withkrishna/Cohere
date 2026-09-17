@@ -80,8 +80,9 @@ function renderExecution(s, transient = []) {
   }
   const twin = s.twin || {};
   if (s.executed) {
+    const transferLabel = twin.inventory_transfer_days > 0 ? `✓ ${twin.inventory_transfer_days}d MOVED` : 'NOT REQUIRED';
     root.innerHTML = `<div class="execution-live verified"><span>✓</span> RECOVERY WORKFLOW VERIFIED</div>
-      <div class="exec-row"><span>Inventory transfer</span><b class="ok">✓ ${twin.inventory_transfer_days || 2}d MOVED</b></div>
+      <div class="exec-row"><span>Inventory transfer</span><b class="ok">${transferLabel}</b></div>
       <div class="exec-row"><span>Chennai runway</span><b class="ok">${twin.chennai_inventory_days}d AVAILABLE</b></div>
       <div class="exec-row"><span>Orders protected</span><b class="ok">✓ ${twin.orders_protected} / 4</b></div>
       <div class="exec-row"><span>Continuity</span><b class="ok">✓ ${twin.continuity}</b></div>`;
@@ -101,9 +102,12 @@ function renderTwin(s) {
     return;
   }
   const protectedCount = t.orders_protected || 0;
+  const transferText = t.inventory_transfer_days > 0
+    ? `↓ ${t.inventory_transfer_days}d transferred`
+    : (s.executed ? 'unaffected by recovery' : 'source inventory');
   root.innerHTML = `<div class="twin-grid">
     <div class="twin-card"><span>CHENNAI-01 RUNWAY</span><b>${t.chennai_inventory_days}d</b><small>${s.executed ? '↑ protected by recovery' : 'baseline before recovery'}</small></div>
-    <div class="twin-card"><span>HYDERABAD-02 RUNWAY</span><b>${t.hyderabad_inventory_days}d</b><small>${t.inventory_transfer_days ? `↓ ${t.inventory_transfer_days}d transferred` : 'source inventory'}</small></div>
+    <div class="twin-card"><span>HYDERABAD-02 RUNWAY</span><b>${t.hyderabad_inventory_days}d</b><small>${transferText}</small></div>
     <div class="twin-card"><span>ORDERS PROTECTED</span><b>${protectedCount} / 4</b><small>${s.executed ? 'digital twin updated' : 'currently at risk'}</small></div>
   </div>`;
 }
@@ -117,8 +121,10 @@ function render(s) {
   $('orders').textContent = i.affected_orders;
   $('order-value').textContent = `${money(i.affected_order_value)} exposure`;
   $('confidence').textContent = s.disrupted ? `${i.confidence}% confidence` : '—';
-  $('buffer').textContent = s.selected_strategy ? `${3.4 - s.selected_strategy.recovery_days >= 0 ? '+' : ''}${(3.4 - s.selected_strategy.recovery_days).toFixed(1)} days` : '—';
-  $('buffer').className = s.selected_strategy ? 'green-text' : '';
+  
+  const bufferValue = s.selected_strategy ? (i.line_stop_days - s.selected_strategy.recovery_days) : null;
+  $('buffer').textContent = bufferValue !== null ? `${bufferValue >= 0 ? '+' : ''}${bufferValue.toFixed(1)} days` : '—';
+  $('buffer').className = bufferValue !== null ? (bufferValue >= 0 ? 'green-text' : 'red-text') : '';
 
   const status = $('system-status');
   status.textContent = s.executed ? '● RECOVERY VERIFIED' : s.disrupted ? '● DISRUPTION ACTIVE' : '● NORMAL OPERATIONS';
