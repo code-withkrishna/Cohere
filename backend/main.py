@@ -12,7 +12,7 @@ from pydantic import BaseModel
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
 
-app = FastAPI(title="COHERE", version="0.1.0", description="Critical Component & Production Continuity Engine")
+app = FastAPI(title="COHERE", version="0.2.0", description="Critical Component & Production Continuity Engine")
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
@@ -67,18 +67,21 @@ class ApprovalRequest(BaseModel):
     strategy_id: str
 
 
+class SimulationRequest(BaseModel):
+    strategy_id: str
+
+
 def audit(event: str, detail: str, actor: str = "COHERE") -> None:
     state["audit"].insert(0, {"timestamp": now(), "event": event, "detail": detail, "actor": actor})
 
 
 def impact() -> dict[str, Any]:
-    disrupted = state["disrupted"]
-    if not disrupted:
+    if not state["disrupted"]:
         return {
             "severity": "NORMAL", "component": "MC-204", "component_name": "Control Processor",
             "supplier": "Alpha Components", "supplier_recovery_days": 0, "inventory_days": 21,
             "line_stop_days": 21, "affected_plants": 0, "affected_orders": 0,
-            "affected_order_value": 0, "confidence": 99,
+            "affected_order_value": 0, "confidence": 99, "plants": [], "orders": [],
         }
     affected_plants = [p for p in PLANTS if any("MC-204" in BOM[x] for x in p["products"])]
     affected_orders = [o for o in ORDERS if "MC-204" in BOM[o["product"]]]
@@ -89,6 +92,26 @@ def impact() -> dict[str, Any]:
         "affected_order_value": sum(o["value"] for o in affected_orders), "confidence": 96,
         "plants": [p["name"] for p in affected_plants], "orders": [o["id"] for o in affected_orders],
     }
+
+
+def impact_graph() -> dict[str, Any]:
+    i = impact()
+    if not state["disrupted"]:
+        return {"nodes": [], "edges": []}
+    plants = [p for p in PLANTS if p["name"] in i["plants"]]
+    orders = [o for o in ORDERS if o["id"] in i["orders"]]
+    nodes = [
+        {"id": "SUP-001", "label": "Alpha Components", "type": "supplier", "status": "DISRUPTED"},
+        {"id": "MC-204", "label": "MC-204 • Control Processor", "type": "component", "status": "CRITICAL"},
+    ]
+    edges = [{"source": "SUP-001", "target": "MC-204", "label": "supplies"}]
+    for plant in plants:
+        nodes.append({"id": plant["id"], "label": plant["name"], "type": "plant", "status": f"{plant['inventory_days']}d runway"})
+        edges.append({"source": "MC-204", "target": plant["id"], "label": "BOM dependency"})
+    for order in orders:
+        nodes.append({"id": order["id"], "label": order["id"], "type": "order", "status": f"₹{order['value']:,}"})
+        edges.append({"source": order["plant"], "target": order["id"], "label": "fulfills"})
+    return {"nodes": nodes, "edges": edges}
 
 
 def generate_scenarios() -> list[dict[str, Any]]:
@@ -106,9 +129,7 @@ def recommendation() -> dict[str, Any] | None:
     scenarios = [s for s in generate_scenarios() if s["feasible"]]
     if not scenarios:
         return None
-    # Prefer the fastest feasible option, then lower cost.
-    best = sorted(scenarios, key=lambda s: (s["recovery_days"], s["cost_delta"]))[0]
-    return best
+    return sorted(scenarios, key=lambda s: (s["recovery_days"], s["cost_delta"]))[0]
 
 
 @app.get("/")
@@ -118,22 +139,16 @@ def root():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "cohere", "version": "0.1.0"}
+    return {"status": "ok", "service": "cohere", "version": "0.2.0"}
 
 
 @app.get("/api/state")
 def get_state():
     rec = recommendation()
     return {
-        "disrupted": state["disrupted"],
-        "approved": state["approved"],
-        "executed": state["executed"],
-        "selected_strategy": state["selected_strategy"],
-        "impact": impact(),
-        "scenarios": generate_scenarios(),
-        "recommendation": rec,
-        "policies": POLICIES,
-        "audit": state["audit"],
+        "disrupted": state["disrupted"], "approved": state["approved"], "executed": state["executed"],
+        "selected_strategy": state["selected_strategy"], "impact": impact(), "impact_graph": impact_graph(),
+        "scenarios": generate_scenarios(), "recommendation": rec, "policies": POLICIES, "audit": state["audit"],
     }
 
 
@@ -149,22 +164,39 @@ def simulate_disruption():
 def generate_recovery():
     if not state["disrupted"]:
         return get_state()
+    scenarios = generate_scenarios()
     rec = recommendation()
+    audit("SCENARIOS_GENERATED", f"Generated {len(scenarios)} recovery scenarios; {sum(s['feasible'] for s in scenarios)} are feasible.", "Scenario Agent")
     if rec:
-        audit("SCENARIOS_GENERATED", f"Generated {len(generate_scenarios())} recovery scenarios; {sum(s['feasible'] for s in generate_scenarios())} are feasible.", "Scenario Agent")
         audit("RECOMMENDATION", f"Recommended {rec['name']} with {rec['recovery_days']} day recovery and ₹{rec['cost_delta']:,} incremental cost.", "Recovery Agent")
     return get_state()
 
 
+@app.post("/api/recovery/simulate")
+def simulate_recovery(req: SimulationRequest):
+    strategy = next((s for s in generate_scenarios() if s["id"] == req.strategy_id), None)
+    if not strategy:
+        return {"ok": False, "error": "Unknown recovery strategy."}
+    buffer = round(impact()["line_stop_days"] - strategy["recovery_days"], 1)
+    return {
+        "ok": True,
+        "strategy": strategy,
+        "recovery_buffer_days": buffer,
+        "line_stop_avoided": buffer >= 0,
+        "decision": "CONTINUITY MAINTAINED" if buffer > 0 else "LINE STOP RISK",
+    }
+
+
 @app.post("/api/recovery/approve")
 def approve_recovery(req: ApprovalRequest):
-    scenarios = {s["id"]: s for s in generate_scenarios()}
-    strategy = scenarios.get(req.strategy_id)
+    strategy = next((s for s in generate_scenarios() if s["id"] == req.strategy_id), None)
     if not strategy or not strategy["feasible"]:
         return {"ok": False, "error": "Strategy is not currently feasible."}
     state["selected_strategy"] = strategy
     state["approved"] = True
-    audit("COMPLIANCE_CHECK", "Policy and compliance checks passed. Approval threshold applies because recovery cost exceeds ₹25,000." if strategy["cost_delta"] > POLICIES["approval_cost_threshold"] else "Policy and compliance checks passed.", "Compliance Agent")
+    needs_threshold = strategy["cost_delta"] > POLICIES["approval_cost_threshold"]
+    detail = "Policy check flagged cost above the approval threshold. Human authorization recorded." if needs_threshold else "Policy and compliance checks passed. Cost is within the configured threshold."
+    audit("COMPLIANCE_CHECK", detail, "Compliance Agent")
     audit("HUMAN_APPROVAL", f"Recovery approved: {strategy['name']}.", "Supply Planner")
     return {"ok": True, **get_state()}
 
@@ -175,8 +207,9 @@ def execute_recovery():
         return {"ok": False, "error": "Human approval is required before execution."}
     state["executed"] = True
     strategy = state["selected_strategy"]
+    buffer = impact()["line_stop_days"] - strategy["recovery_days"]
     audit("EXECUTION", f"Executed recovery plan: {strategy['name']}. Inventory, procurement and production actions were simulated.", "Execution Agent")
-    audit("RECOVERY_VERIFIED", "Production continuity restored with a positive recovery buffer.", "Verification Agent")
+    audit("RECOVERY_VERIFIED", f"Production continuity restored with a +{buffer:.1f}-day recovery buffer.", "Verification Agent")
     return {"ok": True, **get_state()}
 
 
