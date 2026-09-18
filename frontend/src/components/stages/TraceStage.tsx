@@ -12,6 +12,7 @@ import {
   Truck,
   ArrowRight,
   Loader2,
+  Info,
 } from 'lucide-react';
 
 interface TraceStageProps {
@@ -28,9 +29,9 @@ export const TraceStage: React.FC<TraceStageProps> = ({
   isLoading = false,
 }) => {
   const impact = cohereState?.impact;
-  const supplierName = impact?.supplier || 'Alpha Components';
-  const componentCode = impact?.component || 'MC-204';
-  const componentName = impact?.component_name || 'Control Processor';
+  const supplierName = impact?.supplier || 'DENSO';
+  const componentCode = impact?.component || 'VCP-204';
+  const componentName = impact?.component_name || 'Vehicle Control Processor';
   const downtimeDays = impact?.supplier_recovery_days || 18;
   const lineStopDays = impact?.line_stop_days ?? 3.4;
   const ordersAtRisk = impact?.affected_orders ?? 4;
@@ -45,11 +46,15 @@ export const TraceStage: React.FC<TraceStageProps> = ({
       {/* Incident Primary Header & Summary Banner */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <div>
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#93000a]/40 text-[#ffb4ab] font-mono text-[11px] tracking-wider uppercase font-semibold border border-[#ffb4ab]/20">
               <span className="w-1.5 h-1.5 rounded-full bg-[#ffb4ab]" />
-              CRITICAL DISRUPTION IDENTIFIED
+              SIMULATED SUPPLIER DISRUPTION
             </span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0d1c2d] text-amber-300/90 font-mono text-[11px] border border-amber-500/25">
+              <Info className="w-3.5 h-3.5 text-amber-400" />
+              <span>SIMULATED SCENARIO • SYNTHETIC DATA</span>
+            </div>
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-[56px] text-[#d4e4fa] font-semibold tracking-tight mt-1">
             {supplierName}
@@ -68,10 +73,10 @@ export const TraceStage: React.FC<TraceStageProps> = ({
             </div>
             <div className="flex flex-col">
               <span className="text-base font-medium text-[#d4e4fa]">
-                Supplier unavailable for {downtimeDays} days
+                Simulated supplier disruption: {supplierName} unavailable for {downtimeDays} days
               </span>
               <p className="text-sm text-[#bbcabf]">
-                {affectedPlants.length} manufacturing facilities exposed. Urgent inventory or sourcing intervention required to avoid line stoppage.
+                Toyota × DENSO context. {affectedPlants.length} manufacturing facilities exposed. Urgent inventory or sourcing intervention required to avoid line stoppage.
               </p>
             </div>
           </div>
@@ -97,7 +102,7 @@ export const TraceStage: React.FC<TraceStageProps> = ({
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-[#3c4a42]/20 text-[#bbcabf] text-xs">
-            Remaining component inventory at {primaryPlant}
+            Remaining VCP-204 inventory at {primaryPlant}
           </div>
         </div>
 
@@ -118,7 +123,7 @@ export const TraceStage: React.FC<TraceStageProps> = ({
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-[#3c4a42]/20 text-[#bbcabf] text-xs">
-            Committed deliveries directly impacted across plants
+            Committed customer deliveries directly impacted across plants
           </div>
         </div>
 
@@ -217,9 +222,9 @@ export const TraceStage: React.FC<TraceStageProps> = ({
                 <Layers className="w-4 h-4 text-[#bbcabf]" />
               </div>
               <span className="text-sm font-semibold text-[#d4e4fa]">
-                BOM-204
+                V-BOM-204
               </span>
-              <span className="text-xs text-[#bbcabf]">AlphaPhone / Tablet</span>
+              <span className="text-xs text-[#bbcabf]">Vehicle Control Assembly</span>
               <span className="font-mono text-[11px] text-[#bbcabf] mt-1">
                 Critical Dependency
               </span>
@@ -266,7 +271,7 @@ export const TraceStage: React.FC<TraceStageProps> = ({
                 <Truck className="w-4 h-4 text-[#4edea3]" />
               </div>
               <span className="text-sm font-semibold text-[#d4e4fa]">
-                {ordersAtRisk} Customer Orders
+                {ordersAtRisk} Production Orders
               </span>
               <span className="text-xs text-[#bbcabf]">Committed Orders</span>
               <span className="font-mono text-[11px] text-[#4edea3] font-semibold mt-1">
@@ -280,7 +285,7 @@ export const TraceStage: React.FC<TraceStageProps> = ({
       {/* Centered Action Area */}
       <div className="flex flex-col items-center justify-center pt-3 pb-4 gap-2 text-center">
         <p className="text-base md:text-lg text-[#d4e4fa] font-normal">
-          Production continuity is at risk.
+          Toyota production continuity is at risk.
         </p>
         <button
           onClick={onFindRecoveryOptions}

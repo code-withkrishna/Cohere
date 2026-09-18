@@ -2,22 +2,24 @@
 
 ## Critical Component & Production Continuity Engine
 
-COHERE is an agentic supply-chain resilience engine for SAP Hackfest 2026. It protects production continuity when critical component disruptions occur across multi-plant manufacturing environments through a deterministic five-stage recovery lifecycle:
+COHERE is an agentic supply-chain resilience engine for SAP Hackfest 2026. It protects manufacturing production continuity when critical component disruptions occur across multi-plant manufacturing environments through a deterministic five-stage recovery lifecycle:
 
 **01 Sense → 02 Trace → 03 Simulate → 04 Govern → 05 Verify**
 
 ---
 
-### Demo Scenario
+### Demo Scenario: Toyota × DENSO Contextualized Synthetic Demonstration
 
-An electronics manufacturer loses access to critical component **MC-204 (Control Processor)** from its primary supplier (**Alpha Components**) for **18 days**. 
+> **IMPORTANT DISCLAIMER — SIMULATED SCENARIO • SYNTHETIC DATA**  
+> Real company relationships (**Toyota Motor Corporation** as OEM/Customer and **DENSO** as primary Tier-1 supplier) are used **only as contextual grounding** so evaluators and operators immediately grasp the multi-tier automotive supply-chain scenario. The disruption, component identifier (`VCP-204`), assembly plants, order values, recovery options, and operational metrics shown in the prototype are **synthetic demonstration data**.  
+> *Do not interpret this scenario as an actual event experienced by Toyota Motor Corporation or DENSO.*
 
-COHERE:
-1. **Senses** normal manufacturing operations and component inventory baselines.
-2. **Traces** the disruption blast radius across Bill-of-Materials (BOM-204), exposed assembly plants (Chennai-01, Hyderabad-02, Bengaluru-03), and 4 customer orders totaling ₹58.7 lakh in order value.
-3. **Simulates** deterministic recovery options (Wait for Supplier, Switch to Alternate Beta Components, Transfer Inventory from Hyderabad-02 to Chennai-01, Component Substitution) and identifies the optimal strategy with positive runway buffer (+1.4 days).
-4. **Governs** high-impact interventions through an explicit **Human Approval Gate** before any procurement or inventory movements occur.
-5. **Verifies** post-execution Digital Twin state (Chennai-01 runway restored 3.4d → 5.4d; Hyderabad-02 balanced 8.2d → 6.2d; 4/4 orders protected; continuity status marked **PROTECTED**) and records an immutable backend audit trail.
+#### Scenario Flow:
+1. **Sense**: Senses normal Toyota vehicle assembly operations across plants (Chennai-01 baseline 3.4d, Hyderabad-02 baseline 8.2d).
+2. **Trace**: Senses simulated Tier-1 supplier disruption (**DENSO** unavailable for **VCP-204 — Vehicle Control Processor** for 18 days). Traces blast radius through **V-BOM-204 (Vehicle Control Assembly)** to assembly plant **Chennai-01** (3.4-day runway to line stop) and 4 committed customer production orders totaling **₹58.7 lakh** in synthetic exposure.
+3. **Simulate**: Deterministic scenario engine evaluates 4 recovery options (Wait for DENSO, Switch to Alternate Supplier Beta Components, Transfer Inventory from Hyderabad-02 to Chennai-01, Use VCP-204B Substitute). Identifies **Transfer Inventory** as optimal feasible recommendation with **+1.4 days** recovery buffer (3.4d runway − 2.0d transfer time = +1.4d).
+4. **Govern**: Enforces a strict **Human Approval Gate** before executing any procurement, logistics, or inventory movements.
+5. **Verify**: Verifies post-execution Digital Twin transformation (Chennai-01 runway: 3.4d → 5.4d; Hyderabad-02 runway: 8.2d → 6.2d; 4/4 orders protected; continuity status: **PROTECTED**) and records an immutable backend audit trail.
 
 ---
 
@@ -44,8 +46,9 @@ COHERE:
    └────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Backend**: Python 3.11+ / FastAPI with deterministic business logic.
+- **Backend**: Python 3.11+ / FastAPI with deterministic business rules and digital twin state manager.
 - **Frontend**: Google Stitch-designed UI with dark navy aesthetic, mint green accents, interactive topology matrices, scenario cards, and Digital Twin transformation views.
+- **Enterprise Direction**: SAP operational data + events (conceptual alignment with SAP IBP, SAP S/4HANA, SAP Transportation Management, and SAP Business Network / Ariba).
 - **Unified Single-Server Deployment**: FastAPI serves the compiled React application directly from `frontend/dist` on port 8000.
 
 ---
@@ -99,11 +102,11 @@ cd backend
 pytest -v
 ```
 All 9 test suites validate:
-- Disruption impact and dependency graph creation
-- Deterministic runway and recovery buffer arithmetic
+- Disruption impact and dependency graph creation (`DENSO` → `VCP-204` → `V-BOM-204` → `PL-01` → orders)
+- Deterministic runway and recovery buffer arithmetic (`3.4 - 2.0 = +1.4 days`)
 - Feasibility constraints and recommendation ranking
 - Human approval authorization enforcement
-- Digital Twin transformation accuracy
+- Digital Twin transformation accuracy (`Chennai: 5.4d`, `Hyderabad: 6.2d`, `4/4 orders protected`)
 - Idempotent recovery execution protection
 - Demo state reset
 
@@ -111,7 +114,6 @@ All 9 test suites validate:
 ```bash
 cd frontend
 npm run build
-npm run lint
 ```
 
 ---
@@ -125,4 +127,4 @@ npm run lint
 
 ---
 
-> **Hackfest Disclosure**: Prototype developed for SAP Hackfest 2026. Uses synthetic manufacturing matrices and deterministic simulation data; no live SAP production credentials or sensitive enterprise customer data are accessed.
+> **Hackfest Disclosure**: Prototype developed for SAP Hackfest 2026. Real company relationships are used only as contextual grounding. The disruption, component identifier, plants, order values, recovery options, and operational metrics shown in the prototype are synthetic demonstration data.

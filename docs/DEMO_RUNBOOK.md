@@ -2,93 +2,119 @@
 
 ## Target duration
 
-3–5 minutes. The demo should tell one story rather than explain every implementation detail.
+3–5 minutes. The demo should tell one concise, impactful story rather than explain every implementation detail.
 
-## Scenario
+## Context & Synthetic Scenario
 
-An electronics manufacturer depends on Alpha Components for critical component MC-204 (Control Processor). Alpha reports an 18-day supply interruption.
+**Scenario Context**: Toyota Motor Corporation × DENSO supply-chain context.  
+**Disclaimer**: Real company relationships are used **only as contextual grounding** so evaluators immediately understand the supply-chain scenario. The disruption, component identifier (`VCP-204`), plants, order values, recovery decisions, and operational figures are **synthetic demonstration data**.
 
-Chennai-01 has only 3.4 days of MC-204 runway.
+In this synthetic demonstration scenario:
+- Primary Tier-1 supplier **DENSO** reports an 18-day simulated interruption for critical component **VCP-204 — Vehicle Control Processor**.
+- **Chennai-01** has only 3.4 days of VCP-204 inventory runway remaining before line stoppage.
+- 4 customer production orders totaling **₹58.7 lakh** in order exposure are immediately placed at risk across the Bill of Materials (**V-BOM-204 — Vehicle Control Assembly**).
 
-## Live sequence
+---
 
-### 1. Normal state
+## Live Sequence
+
+### 1. Normal state (Sense Stage)
 
 Start on the dashboard. Say:
 
-> “This is the supply chain before the failure. COHERE is watching the dependency between suppliers, components, plants and customer orders.”
+> “This is Toyota's production continuity baseline before any disruption occurs. COHERE continuously monitors multi-tier dependencies between Tier-1 suppliers like DENSO, critical components, vehicle assembly plants, and customer delivery schedules. Note that while we use real-world enterprise context for grounding, all operational and incident metrics shown are synthetic demonstration figures.”
 
-### 2. Trigger disruption
+### 2. Trigger disruption (Trace Stage)
 
 Click **Simulate Supplier Failure**.
 
 Say:
 
-> “At 09:17, our primary supplier becomes unavailable for 18 days. A conventional system would raise an alert. COHERE asks a different question: what will actually stop?”
+> “At 09:17, our Tier-1 supplier DENSO encounters a simulated 18-day interruption for critical component VCP-204 (Vehicle Control Processor). A conventional alert system simply pings an inbox. COHERE asks a different question: what manufacturing line will actually stop, and when?”
 
-### 3. Show impact
+### 3. Show impact & blast radius
 
 Point to:
 
-- MC-204 as the critical component
-- 3 affected plants
-- 4 affected orders
-- 3.4-day production runway
-- order value exposed
+- **VCP-204 — Vehicle Control Processor** as the single-point-of-failure component
+- **V-BOM-204 — Vehicle Control Assembly** dependency
+- **Chennai-01** with **3.4 days** of production runway remaining
+- **4 committed customer production orders** exposed
+- **₹58.7 lakh** total order exposure
 
 Say:
 
-> “The disruption is now translated from a supplier event into a production-impact event.”
+> “COHERE immediately translates a raw supplier signal into an operational blast radius across plants and committed customer orders.”
 
-### 4. Show scenarios
+### 4. Show evaluated scenarios (Simulate Stage)
 
-Compare the recovery cards:
+Click **Find Recovery Options →**. Compare the 4 deterministic recovery cards:
 
-- wait for primary supplier
-- switch to alternate supplier
-- transfer existing inventory
-- substitute component requiring engineering review
-
-Say:
-
-> “COHERE evaluates time, cost, risk and constraints instead of blindly choosing the cheapest option.”
-
-### 5. Human gate
-
-Select the feasible recommended option and show the approval panel.
+1. **WAIT (Primary Supplier - DENSO)**: 18 days, ₹0 cost delta, **HIGH Risk / INFEASIBLE**, Buffer: **-14.6 days**
+2. **ALT SUPPLIER (Beta Components)**: 3 days, ₹42,000, **LOW Risk / FEASIBLE**, Buffer: **+0.4 days**
+3. **TRANSFER INVENTORY (Hyderabad-02 → Chennai-01)**: 2 days, ₹18,000, **LOW Risk / FEASIBLE**, Buffer: **+1.4 days** *(RECOMMENDED)*
+4. **SUBSTITUTE (VCP-204B)**: 3 days, ₹15,000, **MEDIUM Risk / REVIEW REQUIRED**, Buffer: **+0.4 days**
 
 Say:
 
-> “The system does not silently change a high-impact procurement decision. Governance decides whether a human must approve it.”
+> “COHERE evaluates time, cost, risk, and compliance deterministically rather than guessing. The engine recommends transferring existing VCP-204 inventory from Hyderabad-02 to Chennai-01, arriving in 2 days and restoring a +1.4-day safety buffer before Chennai exhausts stock.”
 
-Click **Approve**.
+### 5. Human-in-the-loop gate (Govern Stage)
 
-### 6. Execute
-
-Click **Execute Recovery**.
+Select the recommended **Transfer Inventory** option and click **Proceed to Governance Gate**.
 
 Say:
 
-> “Only after approval does the execution layer simulate the inventory, procurement and production actions.”
+> “Crucially, COHERE does not silently alter procurement routes or dispatch freight without human authorization. The Human Approval Gate enforces governance policy, verifies cost thresholds, and requests explicit planner authorization.”
 
-### 7. Verify + audit
+Click **Approve & Execute**.
 
-Show the green continuity state and audit trail.
+### 6. Execute & Digital Twin update
+
+Watch the 4-phase execution sequence: Human Authorization Recorded → Inventory Transfer Dispatched → Production Schedule Adjusted → Digital Twin Synchronized.
+
+Say:
+
+> “Upon explicit approval, the execution layer simulates the inventory reallocation, updates ERP records, and synchronizes the Digital Twin.”
+
+### 7. Verify + audit (Verify Stage)
+
+Click **View Verification Report**.
+
+Show the Digital Twin transformation:
+- **Chennai-01 Runway**: 3.4 days → **5.4 days**
+- **Hyderabad-02 Runway**: 8.2 days → **6.2 days** (balanced)
+- **Orders Protected**: 0/4 → **4/4 (100%)**
+- **Continuity Status**: AT RISK → **PROTECTED**
+- **Recovery Buffer**: **+1.4 days**
+
+Open the **Audit Log** modal to show the complete, immutable event trail from detection to verification.
 
 Close with:
 
-> “The goal isn't to predict every disruption. The goal is to reduce the time between disruption and recovery — while keeping the decision explainable and governed.”
+> “The goal isn't to predict every black-swan event. The goal is to compress the time from disruption signal to verified recovery from days to seconds — with deterministic precision, explainable trade-offs, and human governance.”
 
-## Failure recovery
+---
 
-If anything behaves unexpectedly, click **Reset Demo** and restart. Do not improvise new features during the presentation.
+## Failure Recovery
 
-## Q&A anchors
+If anything behaves unexpectedly during presentation, click **Reset** in the top header to return to the baseline state.
 
-**Why AI?** Agents interpret disruption signals, coordinate specialist reasoning and explain decisions; deterministic business rules remain the source of truth for critical calculations.
+---
 
-**Why SAP?** The concept maps naturally to SAP IBP planning, S/4HANA business data, SAP Transportation Management, SAP Business Network/Ariba and SAP BTP/AI capabilities.
+## Q&A Anchors
 
-**Why human-in-the-loop?** Supplier changes, elevated-risk routes and decisions above policy thresholds can have material business/compliance consequences.
+**Why use Toyota × DENSO context?**  
+It provides immediate, intuitive grounding in real-world tier-1 automotive manufacturing relationships. Operational metrics and disruption parameters are synthetic demo data.
 
-**Is the demo using real enterprise data?** No. It uses synthetic data to demonstrate the workflow safely.
+**Why AI + Deterministic Rules?**  
+Agents interpret disruption signals, orchestrate multi-agent analysis, and explain recovery trade-offs; deterministic arithmetic retains absolute authority over runway days, recovery buffers, feasibility, and financial exposure.
+
+**Enterprise direction?**  
+Enterprise direction: SAP operational data + events. Concepts map directly to SAP Integrated Business Planning (IBP), S/4HANA supply chain data, SAP Transportation Management, and SAP Business Network / Ariba.
+
+**Why human-in-the-loop?**  
+Inter-facility transfers, alternate supplier qualifications, and emergency freight incur costs and compliance overhead that must remain under human governance.
+
+**Is the demo using real enterprise data?**  
+No. All operational figures, component IDs, disruption durations, and order values are synthetic demonstration data.

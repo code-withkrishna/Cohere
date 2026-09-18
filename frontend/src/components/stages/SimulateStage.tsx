@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StageNumber, CohereState, BackendScenario, SimulationResult } from '../../types';
+import { StageNumber, CohereState, SimulationResult } from '../../types';
 import { simulateRecovery } from '../../api/cohereApi';
 import { StageNav } from '../StageNav';
 import {
@@ -7,9 +7,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Compass,
-  Loader2,
-  AlertTriangle,
-  ShieldCheck,
+  Info,
 } from 'lucide-react';
 
 interface SimulateStageProps {
@@ -28,7 +26,7 @@ export const SimulateStage: React.FC<SimulateStageProps> = ({
   onProceedToGovern,
 }) => {
   const [simulationCache, setSimulationCache] = useState<Record<string, SimulationResult>>({});
-  const [loadingSim, setLoadingSim] = useState<string | null>(null);
+  const [, setLoadingSim] = useState<string | null>(null);
 
   const scenarios = cohereState?.scenarios || [];
   const recommendation = cohereState?.recommendation;
@@ -52,7 +50,7 @@ export const SimulateStage: React.FC<SimulateStageProps> = ({
           setLoadingSim(null);
         });
     }
-  }, [selectedStrategyId]);
+  }, [selectedStrategyId, simulationCache]);
 
   // Default corridor labels for display
   const getCorridor = (scId: string) => {
@@ -62,10 +60,10 @@ export const SimulateStage: React.FC<SimulateStageProps> = ({
       case 'ALT_SUPPLIER':
         return 'Beta Components (Pune) → Chennai-01';
       case 'SUBSTITUTE':
-        return 'Chennai-01 Internal Buffer';
+        return 'Chennai-01 Internal Buffer (VCP-204B)';
       case 'WAIT':
       default:
-        return 'Alpha Components (Primary)';
+        return 'DENSO (Primary Supplier)';
     }
   };
 
@@ -78,7 +76,7 @@ export const SimulateStage: React.FC<SimulateStageProps> = ({
       {/* Header briefing */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#3c4a42]/30">
         <div className="flex flex-col gap-1 max-w-2xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-[11px] text-[#4edea3] uppercase tracking-wider font-semibold">
               STAGE 03 // SIMULATION &amp; MITIGATION
             </span>
@@ -86,12 +84,17 @@ export const SimulateStage: React.FC<SimulateStageProps> = ({
             <span className="font-mono text-[11px] text-[#bbcabf] uppercase font-semibold">
               BACKEND ENGINE ACTIVE
             </span>
+            <span className="text-[#3c4a42] text-xs">•</span>
+            <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-300/90 bg-[#0d1c2d] px-2 py-0.5 rounded border border-amber-500/20">
+              <Info className="w-3 h-3 text-amber-400" />
+              SIMULATED SCENARIO • SYNTHETIC DATA
+            </span>
           </div>
           <h1 className="text-3xl md:text-4xl text-[#d4e4fa] font-semibold tracking-tight">
             Select Recovery Strategy
           </h1>
           <p className="text-sm text-[#bbcabf]">
-            COHERE evaluated {scenarios.length} recovery scenarios using deterministic runway calculations for Chennai-01.
+            COHERE evaluated {scenarios.length} recovery scenarios using deterministic runway calculations for Chennai-01 (Toyota × DENSO context).
           </p>
         </div>
 

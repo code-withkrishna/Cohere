@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { StageNumber, CohereState } from '../types';
-import { RefreshCw, User, RotateCcw } from 'lucide-react';
+import { RefreshCw, User, RotateCcw, AlertCircle } from 'lucide-react';
 
 interface HeaderProps {
   stage: StageNumber;
@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="fixed top-0 w-full z-50 bg-[#010f1f]/90 backdrop-blur-xl border-b border-[#3c4a42]/30">
       <div className="h-16 w-full max-w-[1920px] mx-auto px-6 md:px-12 flex items-center justify-between">
         {/* Left branding */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <button
             onClick={() => setStage(1)}
             className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none"
@@ -67,10 +67,18 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </button>
 
-          <div className="hidden lg:flex items-center px-2.5 py-0.5 rounded-full bg-[#0d1c2d] border border-[#3c4a42]/40">
-            <span className="font-mono text-[11px] text-[#bbcabf] uppercase tracking-wider font-semibold">
-              FastAPI Engine v0.3.0
+          {/* Context & Synthetic Scenario Pill */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d1c2d] border border-[#3c4a42]/40">
+            <span className="font-mono text-[11px] text-[#4edea3] font-medium tracking-wide">
+              Toyota × DENSO Context
             </span>
+            <span className="text-[#3c4a42] text-[10px]">|</span>
+            <div className="flex items-center gap-1 text-amber-400/90">
+              <AlertCircle className="w-3 h-3 text-amber-400" />
+              <span className="font-mono text-[10px] uppercase tracking-wider font-semibold">
+                Simulated Scenario • Synthetic Data
+              </span>
+            </div>
           </div>
         </div>
 
@@ -138,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-[#122131] border border-[#ffb4ab]/40 text-[#ffb4ab]'
                   : 'bg-[#4edea3] text-[#003824]'
               }`}
-              title="Continuity Operator (Supply Planner)"
+              title="Continuity Operator (Toyota Supply Planner)"
             >
               <User className="w-4 h-4" />
             </div>
