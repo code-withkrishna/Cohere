@@ -27,35 +27,35 @@ def now() -> str:
 
 
 SUPPLIERS = [
-    {"id": "SUP-001", "name": "Alpha Components", "status": "active", "lead_time_days": 18, "unit_cost": 10.0, "capacity": 0, "compliance": "PASS"},
+    {"id": "SUP-001", "name": "DENSO", "status": "active", "lead_time_days": 18, "unit_cost": 10.0, "capacity": 0, "compliance": "PASS"},
     {"id": "SUP-002", "name": "Beta Components", "status": "active", "lead_time_days": 4, "unit_cost": 10.8, "capacity": 8000, "compliance": "PASS"},
     {"id": "SUP-003", "name": "Gamma Components", "status": "active", "lead_time_days": 7, "unit_cost": 10.3, "capacity": 2500, "compliance": "PASS"},
 ]
 
 COMPONENTS = [
     {"id": "MC-101", "name": "Power Module", "critical": False},
-    {"id": "MC-204", "name": "Control Processor", "critical": True},
+    {"id": "VCP-204", "name": "Vehicle Control Processor", "critical": True},
     {"id": "MC-305", "name": "Display Driver", "critical": False},
     {"id": "MC-411", "name": "Connectivity Module", "critical": False},
 ]
 
 BOM = {
-    "AlphaPhone": ["MC-101", "MC-204", "MC-305"],
-    "AlphaTablet": ["MC-101", "MC-204", "MC-411"],
-    "AlphaRouter": ["MC-204", "MC-411"],
+    "Vehicle Control Assembly": ["MC-101", "VCP-204", "MC-305"],
+    "Powertrain Control Assembly": ["MC-101", "VCP-204", "MC-411"],
+    "Chassis Control Assembly": ["VCP-204", "MC-411"],
 }
 
 BASE_PLANTS = [
-    {"id": "PL-01", "name": "Chennai-01", "inventory_days": 3.4, "products": ["AlphaPhone", "AlphaTablet"]},
-    {"id": "PL-02", "name": "Hyderabad-02", "inventory_days": 8.2, "products": ["AlphaRouter", "AlphaPhone"]},
-    {"id": "PL-03", "name": "Bengaluru-03", "inventory_days": 5.6, "products": ["AlphaTablet", "AlphaRouter"]},
+    {"id": "PL-01", "name": "Chennai-01", "inventory_days": 3.4, "products": ["Vehicle Control Assembly", "Powertrain Control Assembly"]},
+    {"id": "PL-02", "name": "Hyderabad-02", "inventory_days": 8.2, "products": ["Chassis Control Assembly", "Vehicle Control Assembly"]},
+    {"id": "PL-03", "name": "Bengaluru-03", "inventory_days": 5.6, "products": ["Powertrain Control Assembly", "Chassis Control Assembly"]},
 ]
 
 BASE_ORDERS = [
-    {"id": "ORD-291", "plant": "PL-01", "product": "AlphaPhone", "quantity": 900, "value": 1850000, "status": "at_risk"},
-    {"id": "ORD-292", "plant": "PL-01", "product": "AlphaTablet", "quantity": 650, "value": 1420000, "status": "at_risk"},
-    {"id": "ORD-301", "plant": "PL-02", "product": "AlphaPhone", "quantity": 500, "value": 1020000, "status": "at_risk"},
-    {"id": "ORD-318", "plant": "PL-03", "product": "AlphaTablet", "quantity": 720, "value": 1580000, "status": "at_risk"},
+    {"id": "ORD-291", "plant": "PL-01", "product": "Vehicle Control Assembly", "quantity": 900, "value": 1850000, "status": "at_risk"},
+    {"id": "ORD-292", "plant": "PL-01", "product": "Powertrain Control Assembly", "quantity": 650, "value": 1420000, "status": "at_risk"},
+    {"id": "ORD-301", "plant": "PL-02", "product": "Vehicle Control Assembly", "quantity": 500, "value": 1020000, "status": "at_risk"},
+    {"id": "ORD-318", "plant": "PL-03", "product": "Powertrain Control Assembly", "quantity": 720, "value": 1580000, "status": "at_risk"},
 ]
 
 POLICIES = {"approval_cost_threshold": 25000, "high_risk_route_approval": True}
@@ -107,19 +107,19 @@ def order_data() -> list[dict[str, Any]]:
 def impact() -> dict[str, Any]:
     if not state["disrupted"]:
         return {
-            "severity": "NORMAL", "component": "MC-204", "component_name": "Control Processor",
-            "supplier": "Alpha Components", "supplier_recovery_days": 0, "inventory_days": 21,
+            "severity": "NORMAL", "component": "VCP-204", "component_name": "Vehicle Control Processor",
+            "supplier": "DENSO", "supplier_recovery_days": 0, "inventory_days": 21,
             "line_stop_days": 21, "affected_plants": 0, "affected_orders": 0,
             "affected_order_value": 0, "confidence": 99, "plants": [], "orders": [],
         }
     plants = plant_data()
     orders = order_data()
-    affected_plants = [p for p in plants if any("MC-204" in BOM[x] for x in p["products"])]
-    affected_orders = [o for o in orders if "MC-204" in BOM[o["product"]]]
+    affected_plants = [p for p in plants if any("VCP-204" in BOM[x] for x in p["products"])]
+    affected_orders = [o for o in orders if "VCP-204" in BOM[o["product"]]]
     runway = plants[0]["inventory_days"]
     return {
-        "severity": "RECOVERED" if state["executed"] else "CRITICAL", "component": "MC-204", "component_name": "Control Processor",
-        "supplier": "Alpha Components", "supplier_recovery_days": 18, "inventory_days": runway,
+        "severity": "RECOVERED" if state["executed"] else "CRITICAL", "component": "VCP-204", "component_name": "Vehicle Control Processor",
+        "supplier": "DENSO", "supplier_recovery_days": 18, "inventory_days": runway,
         "line_stop_days": runway, "affected_plants": 0 if state["executed"] else len(affected_plants),
         "affected_orders": 0 if state["executed"] else len(affected_orders),
         "affected_order_value": 0 if state["executed"] else sum(o["value"] for o in affected_orders),
@@ -134,15 +134,15 @@ def impact_graph() -> dict[str, Any]:
     plants = plant_data()
     orders = order_data()
     nodes = [
-        {"id": "SUP-001", "label": "Alpha Components", "type": "supplier", "status": "DISRUPTED"},
-        {"id": "MC-204", "label": "MC-204 • Control Processor", "type": "component", "status": "RECOVERED" if state["executed"] else "CRITICAL"},
+        {"id": "SUP-001", "label": "DENSO", "type": "supplier", "status": "DISRUPTED"},
+        {"id": "VCP-204", "label": "VCP-204 • Vehicle Control Processor", "type": "component", "status": "RECOVERED" if state["executed"] else "CRITICAL"},
     ]
-    edges = [{"source": "SUP-001", "target": "MC-204", "label": "supplies"}]
+    edges = [{"source": "SUP-001", "target": "VCP-204", "label": "supplies"}]
     for plant in plants:
         nodes.append({"id": plant["id"], "label": plant["name"], "type": "plant", "status": f"{plant['inventory_days']}d runway"})
-        edges.append({"source": "MC-204", "target": plant["id"], "label": "BOM dependency"})
+        edges.append({"source": "VCP-204", "target": plant["id"], "label": "BOM dependency"})
     for order in orders:
-        if "MC-204" in BOM[order["product"]]:
+        if "VCP-204" in BOM[order["product"]]:
             nodes.append({"id": order["id"], "label": order["id"], "type": "order", "status": "PROTECTED" if state["executed"] else f"₹{order['value']:,}"})
             edges.append({"source": order["plant"], "target": order["id"], "label": "fulfills"})
     return {"nodes": nodes, "edges": edges}
@@ -155,7 +155,7 @@ def generate_scenarios() -> list[dict[str, Any]]:
     catalog = [
         {
             "id": "WAIT",
-            "name": "Wait for Primary Supplier",
+            "name": "Wait for Primary Supplier (DENSO)",
             "recovery_days": 18,
             "cost_delta": 0,
             "line_stop_risk": "HIGH",
@@ -178,11 +178,11 @@ def generate_scenarios() -> list[dict[str, Any]]:
             "cost_delta": 18000,
             "line_stop_risk": "LOW",
             "compliance": "PASS",
-            "reason": "Move existing MC-204 stock from Hyderabad-02 before Chennai-01 reaches zero.",
+            "reason": "Move existing VCP-204 stock from Hyderabad-02 before Chennai-01 reaches zero.",
         },
         {
             "id": "SUBSTITUTE",
-            "name": "Use MC-204B Substitute",
+            "name": "Use VCP-204B Substitute",
             "recovery_days": 3,
             "cost_delta": 15000,
             "line_stop_risk": "MEDIUM",
@@ -250,7 +250,7 @@ def simulate_disruption():
         "chennai_inventory_days": 3.4, "hyderabad_inventory_days": 8.2, "inventory_transfer_days": 0,
         "orders_protected": 0, "continuity": "AT RISK",
     }})
-    audit("DISRUPTION_DETECTED", "Alpha Components reports an 18-day interruption for critical component MC-204.", "Disruption Agent")
+    audit("DISRUPTION_DETECTED", "DENSO reports an 18-day interruption for critical component VCP-204.", "Disruption Agent")
     audit("IMPACT_ANALYSIS", "3 plants and 4 customer orders are exposed; production runway is 3.4 days.", "Impact Agent")
     return get_state()
 

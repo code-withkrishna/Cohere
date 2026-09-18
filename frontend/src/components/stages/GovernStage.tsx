@@ -44,7 +44,7 @@ export const GovernStage: React.FC<GovernStageProps> = ({
       line_stop_risk: 'LOW',
       compliance: 'PASS',
       feasible: true,
-      reason: 'Move existing MC-204 stock from Hyderabad-02.',
+      reason: 'Move existing VCP-204 stock from Hyderabad-02.',
     };
 
   const lineStopDays = cohereState?.impact?.line_stop_days ?? 3.4;
@@ -100,13 +100,17 @@ export const GovernStage: React.FC<GovernStageProps> = ({
       {/* Context & Baseline Briefing */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#3c4a42]/30">
         <div className="flex flex-col gap-1 max-w-2xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-[11px] text-[#4edea3] uppercase tracking-wider font-semibold">
               STAGE 04 // GOVERN &amp; EXECUTE
             </span>
             <span className="text-[#3c4a42] text-xs">•</span>
             <span className="font-mono text-[11px] text-[#bbcabf] uppercase font-semibold">
               AUTHORIZATION GATE
+            </span>
+            <span className="text-[#3c4a42] text-xs">•</span>
+            <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-300/90 bg-[#0d1c2d] px-2 py-0.5 rounded border border-amber-500/20">
+              SIMULATED SCENARIO • SYNTHETIC DATA
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl lg:text-[32px] font-semibold text-[#d4e4fa] tracking-tight">
@@ -115,7 +119,7 @@ export const GovernStage: React.FC<GovernStageProps> = ({
           <p className="text-sm text-[#bbcabf]">
             {isExecuting
               ? `Executing authorized plan: ${selectedScenario.name}. Backend Digital Twin state is being updated.`
-              : 'COHERE verified that this strategy prevents line stoppage at Chennai-01 with human governance gate active.'}
+              : 'COHERE verified that this strategy prevents line stoppage at Chennai-01 with human governance gate active (Toyota × DENSO context).'}
           </p>
         </div>
 

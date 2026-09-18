@@ -1,7 +1,6 @@
 import { StageNumber, CohereState } from '../../types';
-import { SUPPLY_CHAIN_NODES } from '../../data/continuityData';
 import { StageNav } from '../StageNav';
-import { ShieldCheck, CheckCircle2, Shield, Zap, ArrowRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Shield, Zap, ArrowRight, Loader2, Info } from 'lucide-react';
 
 interface SenseStageProps {
   setStage: (stage: StageNumber) => void;
@@ -32,19 +31,25 @@ export const SenseStage: React.FC<SenseStageProps> = ({
 
       {/* Hero Header */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl pt-2">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0d1c2d]/80 border border-[#3c4a42]/30 mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0d1c2d]/80 border border-[#3c4a42]/30 mb-4 flex-wrap justify-center">
           <span className="w-1.5 h-1.5 rounded-full bg-[#4edea3] animate-pulse" />
           <span className="font-mono text-[11px] text-[#4edea3] uppercase tracking-widest font-semibold">
             CONTINUITY LOCK ESTABLISHED
           </span>
           <span className="text-[#3c4a42] font-mono text-[10px] mx-1">|</span>
           <span className="font-mono text-[11px] text-[#bbcabf] font-semibold">
-            SYNCHRONIZED WITH BACKEND ENGINE
+            TOYOTA × DENSO SUPPLY-CHAIN CONTEXT
           </span>
         </div>
 
+        {/* Disclaimer Banner */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#0d1c2d]/60 border border-amber-500/25 text-amber-300/90 text-xs font-mono mb-4">
+          <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>SIMULATED SCENARIO • SYNTHETIC DATA — Toyota × DENSO context. Incident and operational figures are synthetic.</span>
+        </div>
+
         <h1 className="text-4xl md:text-5xl lg:text-[56px] font-semibold text-white tracking-tight leading-tight mb-4 selection:bg-[#4edea3] selection:text-[#003824]">
-          Production is running normally.
+          Toyota production is running normally.
         </h1>
         <p className="text-base md:text-lg text-[#bbcabf] max-w-2xl font-light tracking-normal leading-relaxed">
           COHERE continuously monitors critical component dependencies and production continuity across your manufacturing matrix.
@@ -133,7 +138,7 @@ export const SenseStage: React.FC<SenseStageProps> = ({
                 TIER-1 SUPPLIERS
               </text>
               <text y="42" textAnchor="middle" className="fill-[#4edea3] font-mono text-[11px] font-medium">
-                STABLE (3 Suppliers)
+                DENSO &amp; ACTIVE
               </text>
             </g>
 
@@ -152,7 +157,7 @@ export const SenseStage: React.FC<SenseStageProps> = ({
                 CRITICAL BILL-OF-MATERIALS
               </text>
               <text y="42" textAnchor="middle" className="fill-[#4edea3] font-mono text-[11px] font-medium">
-                MC-204 MAPPED
+                VCP-204 MAPPED
               </text>
             </g>
 
@@ -288,7 +293,7 @@ export const SenseStage: React.FC<SenseStageProps> = ({
         </button>
 
         <p className="text-xs text-[#bbcabf] mt-3 tracking-normal font-sans">
-          Trigger real-time blast-radius simulation for <span className="font-mono text-[#4edea3]">Alpha Components (MC-204)</span> via COHERE engine.
+          Trigger real-time blast-radius simulation for <span className="font-mono text-[#4edea3]">DENSO (VCP-204)</span> via COHERE engine.
         </p>
       </div>
 

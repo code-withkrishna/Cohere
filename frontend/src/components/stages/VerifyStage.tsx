@@ -55,17 +55,21 @@ export const VerifyStage: React.FC<VerifyStageProps> = ({
       {/* Hero Status Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#3c4a42]/30 pb-5 gap-4">
         <div>
-          <div className="flex items-center space-x-2.5 mb-1.5">
+          <div className="flex items-center space-x-2.5 mb-1.5 flex-wrap">
             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-wider font-semibold bg-[#4edea3]/15 text-[#4edea3] border border-[#4edea3]/30">
               STAGE 05 // CONTINUITY PROTECTED
             </span>
             <span className="text-[#bbcabf] font-mono text-xs">• VERIFICATION COMPLETE</span>
+            <span className="text-[#3c4a42] text-xs">•</span>
+            <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-300/90 bg-[#0d1c2d] px-2 py-0.5 rounded border border-amber-500/20">
+              SIMULATED SCENARIO • SYNTHETIC DATA
+            </span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-white">
-            Production continuity protected.
+            Toyota production continuity protected.
           </h1>
           <p className="text-[#bbcabf] text-sm mt-1">
-            Recovery executed and verified by COHERE Digital Twin engine.
+            Recovery executed and verified by COHERE Digital Twin engine (Toyota × DENSO context).
           </p>
         </div>
 
