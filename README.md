@@ -2,50 +2,127 @@
 
 ## Critical Component & Production Continuity Engine
 
-COHERE is an agentic supply-chain resilience prototype for SAP Hackfest 2026. It demonstrates a focused recovery workflow:
+COHERE is an agentic supply-chain resilience engine for SAP Hackfest 2026. It protects production continuity when critical component disruptions occur across multi-plant manufacturing environments through a deterministic five-stage recovery lifecycle:
 
-**Disruption → Impact Graph → Time-to-Line-Stop → Recovery Scenarios → Compliance → Human Approval → Execution → Recovery Verification → Audit Trail**
+**01 Sense → 02 Trace → 03 Simulate → 04 Govern → 05 Verify**
 
-### Demo scenario
+---
 
-An electronics manufacturer loses access to critical component **MC-204** from its primary supplier for 18 days. COHERE traces affected plants, production orders and customer orders, calculates the production runway, generates deterministic recovery options, applies policy guardrails, requests human approval for high-impact actions, executes the approved recovery plan and records an audit trail.
+### Demo Scenario
 
-### Architecture
+An electronics manufacturer loses access to critical component **MC-204 (Control Processor)** from its primary supplier (**Alpha Components**) for **18 days**. 
 
-- **FastAPI** backend
-- Deterministic business/decision engine for critical calculations
-- Lightweight agent-style orchestration layer
-- Vanilla HTML/CSS/JS frontend for a zero-build demo
-- Synthetic enterprise data designed for the SAP Hackfest presentation
+COHERE:
+1. **Senses** normal manufacturing operations and component inventory baselines.
+2. **Traces** the disruption blast radius across Bill-of-Materials (BOM-204), exposed assembly plants (Chennai-01, Hyderabad-02, Bengaluru-03), and 4 customer orders totaling ₹58.7 lakh in order value.
+3. **Simulates** deterministic recovery options (Wait for Supplier, Switch to Alternate Beta Components, Transfer Inventory from Hyderabad-02 to Chennai-01, Component Substitution) and identifies the optimal strategy with positive runway buffer (+1.4 days).
+4. **Governs** high-impact interventions through an explicit **Human Approval Gate** before any procurement or inventory movements occur.
+5. **Verifies** post-execution Digital Twin state (Chennai-01 runway restored 3.4d → 5.4d; Hyderabad-02 balanced 8.2d → 6.2d; 4/4 orders protected; continuity status marked **PROTECTED**) and records an immutable backend audit trail.
 
-### Run locally
+---
 
-```bash
-cd backend
-python -m venv .venv
-# Windows
-.venv\\Scripts\\activate
-# macOS/Linux
-# source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+### System Architecture
+
+```
+                                 COHERE PLATFORM
+                                 
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │                       Google Stitch Presentation Layer                 │
+   │               (React 18 • TypeScript • Tailwind CSS • Vite)            │
+   │                                                                        │
+   │   [01 SENSE]  →  [02 TRACE]  →  [03 SIMULATE]  →  [04 GOVERN]  →  [05 VERIFY]
+   └───────────────────────────────────┬────────────────────────────────────┘
+                                       │ REST API (/api/*)
+                                       ▼
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │                           FastAPI Backend                              │
+   │                                                                        │
+   │   • Disruption Simulation Engine        • Deterministic Recovery Math  │
+   │   • Multi-tier Dependency Graph         • Policy & Compliance Checks   │
+   │   • Human Approval Authorization Gate   • Digital Twin State Manager   │
+   │   • Synchronized Audit Logging Engine   • Idempotent Execution         │
+   └────────────────────────────────────────────────────────────────────────┘
 ```
 
-Open http://127.0.0.1:8000
+- **Backend**: Python 3.11+ / FastAPI with deterministic business logic.
+- **Frontend**: Google Stitch-designed UI with dark navy aesthetic, mint green accents, interactive topology matrices, scenario cards, and Digital Twin transformation views.
+- **Unified Single-Server Deployment**: FastAPI serves the compiled React application directly from `frontend/dist` on port 8000.
 
-### Demo flow
+---
 
-1. Start from the green **Normal Operations** state.
-2. Click **Simulate Supplier Failure**.
-3. Review the impact graph and time-to-line-stop.
-4. Generate recovery scenarios.
-5. Inspect the recommended plan and governance checks.
-6. Click **Approve Recovery**.
-7. Show execution status and audit trail.
-8. Use **Reset Demo** to repeat the scenario.
+### Getting Started
 
-### Design principle
+#### Prerequisites
+- Python 3.10+ (Python 3.11 recommended)
+- Node.js 18+ and npm
 
-The LLM is not trusted with critical arithmetic or policy enforcement. Inventory runway, recovery timing, cost, feasibility and approval thresholds are deterministic. An LLM can later be added for disruption interpretation, explanations and orchestration without becoming the source of truth for business constraints.
+#### 1. Quick Start (Single Command - Backend & Frontend)
 
-> Prototype for SAP Hackfest 2026. Synthetic data only; no production SAP credentials or customer data are used.
+```bash
+# 1. Build the frontend (one time or after frontend edits)
+cd frontend
+npm install
+npm run build
+cd ..
+
+# 2. Run the FastAPI application
+cd backend
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --reload --port 8000
+```
+
+Open your browser at **http://127.0.0.1:8000**
+
+---
+
+#### 2. Frontend Development Mode (Vite Hot-Reload)
+
+```bash
+# Terminal 1: Backend
+cd backend
+python -m uvicorn main:app --port 8000
+
+# Terminal 2: Frontend Dev Server (Proxies /api -> localhost:8000)
+cd frontend
+npm run dev
+```
+
+Open your browser at **http://localhost:3000**
+
+---
+
+### Running Verification Tests
+
+#### Backend Automated Test Suite
+```bash
+cd backend
+pytest -v
+```
+All 9 test suites validate:
+- Disruption impact and dependency graph creation
+- Deterministic runway and recovery buffer arithmetic
+- Feasibility constraints and recommendation ranking
+- Human approval authorization enforcement
+- Digital Twin transformation accuracy
+- Idempotent recovery execution protection
+- Demo state reset
+
+#### Frontend Build & Type Check
+```bash
+cd frontend
+npm run build
+npm run lint
+```
+
+---
+
+### Core Design Principles
+
+1. **Deterministic Core**: Arithmetic calculations (runway days, recovery buffers, financial exposure, inventory transfers) are strictly deterministic and enforced by the backend engine.
+2. **Human-in-the-Loop Governance**: Real operational interventions pause at an explicit approval gate before execution can proceed.
+3. **Idempotency**: Execution requests are strictly idempotent to prevent duplicate order dispatches or corrupted twin states.
+4. **Transparent Audit Trail**: Every event across detection, tracing, simulation, governance, and execution is recorded with timestamps and responsible agent actors.
+
+---
+
+> **Hackfest Disclosure**: Prototype developed for SAP Hackfest 2026. Uses synthetic manufacturing matrices and deterministic simulation data; no live SAP production credentials or sensitive enterprise customer data are accessed.

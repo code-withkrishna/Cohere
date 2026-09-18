@@ -1,0 +1,6 @@
+{
+  "name": "COHERE - Production Continuity Engine",
+  "description": "Production continuity and resilient supply chain engine featuring telemetry monitoring, blast-radius disruption tracing, recovery simulation, and automated governance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,68 +1,21 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>COHERE — Production Continuity</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand"><span class="brand-mark">C</span><div><strong>COHERE</strong><small>Critical Component & Production Continuity Engine</small></div></div>
-    <div class="top-actions"><span id="system-status" class="pill green">● NORMAL OPERATIONS</span><button class="ghost" onclick="resetDemo()">Reset Demo</button></div>
-  </header>
-
-  <main class="shell">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">SUPPLY CHAIN RESILIENCE • LIVE SIMULATION</p>
-        <h1>Keep production alive when the supply chain breaks.</h1>
-        <p class="sub">COHERE traces a critical-component disruption from supplier to customer, evaluates recovery paths, applies governance, and executes the approved plan.</p>
-      </div>
-      <button id="simulate" class="primary big" onclick="simulateDisruption()">⚡ Simulate Supplier Failure</button>
-    </section>
-
-    <section class="metrics" id="metrics">
-      <div class="metric"><span>DISRUPTION</span><strong id="severity">NORMAL</strong><small id="supplier">No active disruption</small></div>
-      <div class="metric"><span>TIME TO LINE STOP</span><strong id="line-stop">21.0 days</strong><small>Chennai-01 production runway</small></div>
-      <div class="metric"><span>ORDERS AT RISK</span><strong id="orders">0</strong><small id="order-value">₹0 exposure</small></div>
-      <div class="metric"><span>RECOVERY BUFFER</span><strong id="buffer">—</strong><small>Recovery time vs production runway</small></div>
-    </section>
-
-    <section class="grid two">
-      <div class="card graph-card">
-        <div class="card-head"><div><span class="section-label">01 / SENSE + TRACE</span><h2>Disruption impact graph</h2></div><span id="confidence" class="confidence">—</span></div>
-        <div id="impact-graph" class="impact-graph"><div class="empty">Trigger a disruption to trace the dependency chain.</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><div><span class="section-label">02 / SCENARIO ENGINE</span><h2>Recovery options</h2></div><span class="agent-dot">● AGENTS READY</span></div>
-        <div id="scenarios" class="scenario-list"><div class="empty">Trigger a disruption to generate recovery scenarios.</div></div>
-      </div>
-    </section>
-
-    <section class="grid two">
-      <div class="card">
-        <div class="card-head"><div><span class="section-label">03 / GOVERNANCE</span><h2>Decision gate</h2></div></div>
-        <div id="decision" class="decision idle"><div class="decision-icon">✓</div><div><b>No approval required</b><p>COHERE is operating normally. High-impact actions will pause here for human approval.</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><span class="section-label">04 / EXECUTION</span><h2>Recovery status</h2></div></div>
-        <div id="execution" class="execution"><div class="exec-row"><span>Inventory transfer</span><b>—</b></div><div class="exec-row"><span>Procurement action</span><b>—</b></div><div class="exec-row"><span>Production schedule</span><b>—</b></div><div class="exec-row"><span>Continuity</span><b>—</b></div></div>
-        <div id="agent-activity" class="agent-activity"><div class="activity-empty">Agent activity will appear as COHERE processes the disruption.</div></div>
-      </div>
-    </section>
-
-    <section class="card twin-section">
-      <div class="card-head"><div><span class="section-label">05 / DIGITAL TWIN</span><h2>Physical-state delta</h2></div><span class="audit-note">Synthetic simulation state</span></div>
-      <div id="digital-twin" class="digital-twin"><div class="empty">Digital twin will show the physical-state delta after recovery execution.</div></div>
-    </section>
-
-    <section class="card audit-card">
-      <div class="card-head"><div><span class="section-label">06 / EXPLAINABILITY</span><h2>Audit trail</h2></div><span class="audit-note">Every material action is recorded</span></div>
-      <div id="audit" class="audit-list"><div class="empty">No events yet.</div></div>
-    </section>
-  </main>
-  <script src="/static/app.js"></script>
-</body>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>COHERE - Production Continuity Engine</title>
+    <meta name="description" content="Production continuity and resilient supply chain engine featuring telemetry monitoring, blast-radius disruption tracing, recovery simulation, and automated governance." />
+    <meta property="og:title" content="COHERE - Production Continuity Engine" />
+    <meta property="og:description" content="Production continuity and resilient supply chain engine featuring telemetry monitoring, blast-radius disruption tracing, recovery simulation, and automated governance." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#051424] text-[#d4e4fa] antialiased select-none min-h-screen overflow-x-hidden font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
+

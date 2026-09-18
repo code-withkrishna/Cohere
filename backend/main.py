@@ -11,9 +11,15 @@ from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
+DIST_DIR = FRONTEND_DIR / "dist"
 
 app = FastAPI(title="COHERE", version="0.3.0", description="Critical Component & Production Continuity Engine")
-app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+if (DIST_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=DIST_DIR / "assets"), name="assets")
+elif FRONTEND_DIR.exists():
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
 
 
 def now() -> str:
@@ -218,6 +224,8 @@ def recommendation() -> dict[str, Any] | None:
 
 @app.get("/")
 def root():
+    if (DIST_DIR / "index.html").exists():
+        return FileResponse(DIST_DIR / "index.html")
     return FileResponse(FRONTEND_DIR / "index.html")
 
 
